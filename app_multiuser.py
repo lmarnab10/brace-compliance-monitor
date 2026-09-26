@@ -324,6 +324,8 @@ elif page == "Wearable Temperature":
         "Patient 1": "wearable-01",
         "Patient 2": "wearable-02",
         "Patient 3": "wearable-03",
+        "Patient 4": "wearable-04",
+        "Patient 5": "wearable-05",
     }
 
     patient_label = st.selectbox("Select patient / device", list(KNOWN_DEVICES.keys()))

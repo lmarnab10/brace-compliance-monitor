@@ -422,24 +422,26 @@ elif page == "Wearable Temperature":
     )
 
 # ---------------------------------------------------------------
-# TEMPERATURE GRAPH SETTINGS
+# TEMPERATURE GRAPH
 # ---------------------------------------------------------------
+
 st.subheader(f"Temperature vs Time - {patient_label}")
 
-col1, col2, col3, col4, col5 = st.columns(5)
+# Graph controls
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     graph_mode = st.selectbox(
         "Graph style",
         ["Line + Symbols", "Line only", "Symbols only"],
-        key="temp_graph_mode"
+        key="wearable_graph_mode"
     )
 
 with col2:
     graph_color = st.selectbox(
         "Graph colour",
         ["Blue", "Red", "Green", "Orange", "Purple", "Black"],
-        key="temp_graph_color"
+        key="wearable_graph_color"
     )
 
 with col3:
@@ -454,32 +456,23 @@ with col3:
             "cross",
             "x"
         ],
-        key="temp_symbol_type"
+        key="wearable_symbol_type"
     )
 
 with col4:
     symbol_size = st.slider(
         "Symbol size",
-        min_value=2,
-        max_value=12,
-        value=5,
-        key="temp_symbol_size"
-    )
-
-with col5:
-    line_width = st.slider(
-        "Line width",
-        min_value=1.0,
-        max_value=6.0,
-        value=2.5,
-        step=0.5,
-        key="temp_line_width"
+        2,
+        12,
+        5,
+        key="wearable_symbol_size"
     )
 
 
 # ---------------------------------------------------------------
-# COLOUR MAPPING
+# SETTINGS
 # ---------------------------------------------------------------
+
 color_map = {
     "Blue": "#1f77b4",
     "Red": "#d62728",
@@ -489,10 +482,6 @@ color_map = {
     "Black": "#000000"
 }
 
-
-# ---------------------------------------------------------------
-# GRAPH MODE
-# ---------------------------------------------------------------
 mode_map = {
     "Line + Symbols": "lines+markers",
     "Line only": "lines",
@@ -501,79 +490,73 @@ mode_map = {
 
 
 # ---------------------------------------------------------------
-# CREATE GRAPH
+# CREATE FIGURE
 # ---------------------------------------------------------------
+
 fig_wearable = go.Figure()
 
-fig_wearable.add_scatter(
-    x=wearable_df["PlotTime"],
-    y=wearable_df["temp"],
-    mode=mode_map[graph_mode],
-    name="Temperature",
+fig_wearable.add_trace(
+    go.Scatter(
+        x=wearable_df["PlotTime"],
+        y=wearable_df["temp"],
+        mode=mode_map[graph_mode],
+        name="Temperature",
 
-    line=dict(
-        color=color_map[graph_color],
-        width=line_width
-    ),
+        line={
+            "color": color_map[graph_color],
+            "width": 2.5
+        },
 
-    marker=dict(
-        color=color_map[graph_color],
-        size=symbol_size,
-        symbol=symbol_type
-    ),
+        marker={
+            "color": color_map[graph_color],
+            "size": symbol_size,
+            "symbol": symbol_type
+        },
 
-    hovertemplate=(
-        "<b>%{x}</b><br>"
-        "Temperature: %{y:.2f} °C"
-        "<extra></extra>"
+        hovertemplate=
+            "<b>%{x}</b><br>"
+            "Temperature: %{y:.2f} °C"
+            "<extra></extra>"
     )
 )
 
 
 # ---------------------------------------------------------------
-# 32 °C THRESHOLD
+# 32 °C REFERENCE LINE
 # ---------------------------------------------------------------
+
 fig_wearable.add_hline(
     y=32,
     line_dash="dash",
     line_width=2,
     line_color="green",
-    annotation_text="32 °C threshold",
+    annotation_text="32 °C",
     annotation_position="top left"
 )
 
 
 # ---------------------------------------------------------------
-# GRAPH LAYOUT
+# LAYOUT
 # ---------------------------------------------------------------
+
 fig_wearable.update_layout(
     xaxis_title="Time",
     yaxis_title="Temperature (°C)",
-
     height=500,
-
     hovermode="x unified",
-
-    margin=dict(
-        l=60,
-        r=30,
-        t=50,
-        b=60
-    ),
-
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    )
+    margin={
+        "l": 60,
+        "r": 30,
+        "t": 50,
+        "b": 60
+    }
 )
 
 
 # ---------------------------------------------------------------
-# DISPLAY GRAPH
+# DISPLAY
 # ---------------------------------------------------------------
+
 st.plotly_chart(
     fig_wearable,
     use_container_width=True

@@ -450,8 +450,7 @@ fig_wearable.update_layout(
 
 st.plotly_chart(fig_wearable, use_container_width=True)
 
-    # Raw data
-    with st.expander("📋 View Wearable Data"):
+    # Raw data with st.expander("📋 View Wearable Data"):
         display_df = wearable_df[
             ["device_datetime", "recorded_at", "temp"]
         ].copy()

@@ -429,7 +429,7 @@ elif page == "Wearable Temperature":
     fig_wearable.add_scatter(
         x=wearable_df["PlotTime"],
         y=wearable_df["temp"],
-        mode="lines+markers",
+        mode="markers",
         name="Temperature",
         line=dict(color="#ff4757", width=2),
         marker=dict(size=4),

@@ -421,18 +421,68 @@ elif page == "Wearable Temperature":
         + wearable_df["PlotTime"].iloc[-1].strftime("%Y-%m-%d %H:%M:%S")
     )
 
-    # Live temperature vs time plot
+    # ---------------------------------------------------------------
+    # TEMPERATURE GRAPH SETTINGS
+    # ---------------------------------------------------------------
     st.subheader(f"Temperature vs Time - {patient_label}")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        graph_mode = st.selectbox(
+            "Graph style",
+            ["Line + Symbols", "Line only", "Symbols only"],
+            key="wearable_graph_mode",
+        )
+
+    with col2:
+        graph_color = st.selectbox(
+            "Graph colour",
+            ["Yellow", "Blue", "Red", "Green", "Orange", "Purple", "Black"],
+            key="wearable_graph_color",
+        )
+
+    with col3:
+        symbol_type = st.selectbox(
+            "Symbol",
+            ["circle", "square", "diamond", "triangle-up", "cross", "x"],
+            key="wearable_symbol_type",
+        )
+
+    # Colour mapping
+    color_map = {
+        "Yellow": "#FFD700",
+        "Blue": "#1f77b4",
+        "Red": "#d62728",
+        "Green": "#2ca02c",
+        "Orange": "#ff7f0e",
+        "Purple": "#9467bd",
+        "Black": "#000000",
+    }
+
+    # Plotly graph mode
+    mode_map = {
+        "Line + Symbols": "lines+markers",
+        "Line only": "lines",
+        "Symbols only": "markers",
+    }
 
     fig_wearable = go.Figure()
 
     fig_wearable.add_scatter(
         x=wearable_df["PlotTime"],
         y=wearable_df["temp"],
-        mode="markers",
+        mode=mode_map[graph_mode],
         name="Temperature",
-        line=dict(color="#ff4757", width=2),
-        marker=dict(size=4),
+        line=dict(
+            color=color_map[graph_color],
+            width=2,
+        ),
+        marker=dict(
+            color=color_map[graph_color],
+            size=6,
+            symbol=symbol_type,
+        ),
         hovertemplate=(
             "<b>%{x}</b><br>"
             "Temperature: %{y:.2f} °C"

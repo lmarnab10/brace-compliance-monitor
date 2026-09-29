@@ -421,30 +421,40 @@ elif page == "Wearable Temperature":
         + wearable_df["PlotTime"].iloc[-1].strftime("%Y-%m-%d %H:%M:%S")
     )
 
-   # ---------------------------------------------------------------
+# ---------------------------------------------------------------
 # TEMPERATURE GRAPH SETTINGS
 # ---------------------------------------------------------------
 st.subheader(f"Temperature vs Time - {patient_label}")
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     graph_mode = st.selectbox(
         "Graph style",
-        ["Line + Symbols", "Line only", "Symbols only"]
+        ["Line + Symbols", "Line only", "Symbols only"],
+        key="temp_graph_mode"
     )
 
 with col2:
     graph_color = st.selectbox(
         "Graph colour",
-        ["Blue", "Red", "Green", "Orange", "Purple", "Black"]
+        ["Blue", "Red", "Green", "Orange", "Purple", "Black"],
+        key="temp_graph_color"
     )
 
 with col3:
     symbol_type = st.selectbox(
         "Symbol",
-        ["circle", "square", "diamond", "triangle-up",
-         "triangle-down", "cross", "x"]
+        [
+            "circle",
+            "square",
+            "diamond",
+            "triangle-up",
+            "triangle-down",
+            "cross",
+            "x"
+        ],
+        key="temp_symbol_type"
     )
 
 with col4:
@@ -452,10 +462,24 @@ with col4:
         "Symbol size",
         min_value=2,
         max_value=12,
-        value=5
+        value=5,
+        key="temp_symbol_size"
     )
 
-# Colour mapping
+with col5:
+    line_width = st.slider(
+        "Line width",
+        min_value=1.0,
+        max_value=6.0,
+        value=2.5,
+        step=0.5,
+        key="temp_line_width"
+    )
+
+
+# ---------------------------------------------------------------
+# COLOUR MAPPING
+# ---------------------------------------------------------------
 color_map = {
     "Blue": "#1f77b4",
     "Red": "#d62728",
@@ -465,13 +489,20 @@ color_map = {
     "Black": "#000000"
 }
 
-# Plotly mode
+
+# ---------------------------------------------------------------
+# GRAPH MODE
+# ---------------------------------------------------------------
 mode_map = {
     "Line + Symbols": "lines+markers",
     "Line only": "lines",
     "Symbols only": "markers"
 }
 
+
+# ---------------------------------------------------------------
+# CREATE GRAPH
+# ---------------------------------------------------------------
 fig_wearable = go.Figure()
 
 fig_wearable.add_scatter(
@@ -482,7 +513,7 @@ fig_wearable.add_scatter(
 
     line=dict(
         color=color_map[graph_color],
-        width=2.5
+        width=line_width
     ),
 
     marker=dict(
@@ -498,14 +529,51 @@ fig_wearable.add_scatter(
     )
 )
 
+
+# ---------------------------------------------------------------
+# 32 °C THRESHOLD
+# ---------------------------------------------------------------
+fig_wearable.add_hline(
+    y=32,
+    line_dash="dash",
+    line_width=2,
+    line_color="green",
+    annotation_text="32 °C threshold",
+    annotation_position="top left"
+)
+
+
+# ---------------------------------------------------------------
+# GRAPH LAYOUT
+# ---------------------------------------------------------------
 fig_wearable.update_layout(
     xaxis_title="Time",
     yaxis_title="Temperature (°C)",
+
     height=500,
+
     hovermode="x unified",
-    margin=dict(l=60, r=30, t=50, b=60)
+
+    margin=dict(
+        l=60,
+        r=30,
+        t=50,
+        b=60
+    ),
+
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    )
 )
 
+
+# ---------------------------------------------------------------
+# DISPLAY GRAPH
+# ---------------------------------------------------------------
 st.plotly_chart(
     fig_wearable,
     use_container_width=True

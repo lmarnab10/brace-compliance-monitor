@@ -421,34 +421,95 @@ elif page == "Wearable Temperature":
         + wearable_df["PlotTime"].iloc[-1].strftime("%Y-%m-%d %H:%M:%S")
     )
 
-    # Live temperature vs time plot
-    st.subheader(f"Temperature vs Time - {patient_label}")
+   # ---------------------------------------------------------------
+# TEMPERATURE GRAPH SETTINGS
+# ---------------------------------------------------------------
+st.subheader(f"Temperature vs Time - {patient_label}")
 
-    fig_wearable = go.Figure()
+col1, col2, col3, col4 = st.columns(4)
 
-    fig_wearable.add_scatter(
-        x=wearable_df["PlotTime"],
-        y=wearable_df["temp"],
-        mode="markers",
-        name="Temperature",
-        line=dict(color="#ff4757", width=2),
-        marker=dict(size=4),
-        hovertemplate=(
-            "<b>%{x}</b><br>"
-            "Temperature: %{y:.2f} °C"
-            "<extra></extra>"
-        ),
+with col1:
+    graph_mode = st.selectbox(
+        "Graph style",
+        ["Line + Symbols", "Line only", "Symbols only"]
     )
 
-    fig_wearable.update_layout(
-        xaxis_title="Time",
-        yaxis_title="Temperature (°C)",
-        height=500,
-        hovermode="x unified",
-        margin=dict(l=60, r=30, t=50, b=60),
+with col2:
+    graph_color = st.selectbox(
+        "Graph colour",
+        ["Blue", "Red", "Green", "Orange", "Purple", "Black"]
     )
 
-    st.plotly_chart(fig_wearable, use_container_width=True)
+with col3:
+    symbol_type = st.selectbox(
+        "Symbol",
+        ["circle", "square", "diamond", "triangle-up",
+         "triangle-down", "cross", "x"]
+    )
+
+with col4:
+    symbol_size = st.slider(
+        "Symbol size",
+        min_value=2,
+        max_value=12,
+        value=5
+    )
+
+# Colour mapping
+color_map = {
+    "Blue": "#1f77b4",
+    "Red": "#d62728",
+    "Green": "#2ca02c",
+    "Orange": "#ff7f0e",
+    "Purple": "#9467bd",
+    "Black": "#000000"
+}
+
+# Plotly mode
+mode_map = {
+    "Line + Symbols": "lines+markers",
+    "Line only": "lines",
+    "Symbols only": "markers"
+}
+
+fig_wearable = go.Figure()
+
+fig_wearable.add_scatter(
+    x=wearable_df["PlotTime"],
+    y=wearable_df["temp"],
+    mode=mode_map[graph_mode],
+    name="Temperature",
+
+    line=dict(
+        color=color_map[graph_color],
+        width=2.5
+    ),
+
+    marker=dict(
+        color=color_map[graph_color],
+        size=symbol_size,
+        symbol=symbol_type
+    ),
+
+    hovertemplate=(
+        "<b>%{x}</b><br>"
+        "Temperature: %{y:.2f} °C"
+        "<extra></extra>"
+    )
+)
+
+fig_wearable.update_layout(
+    xaxis_title="Time",
+    yaxis_title="Temperature (°C)",
+    height=500,
+    hovermode="x unified",
+    margin=dict(l=60, r=30, t=50, b=60)
+)
+
+st.plotly_chart(
+    fig_wearable,
+    use_container_width=True
+)
 
     # Raw data
     with st.expander("📋 View Wearable Data"):

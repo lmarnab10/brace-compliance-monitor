@@ -421,36 +421,37 @@ elif page == "Wearable Temperature":
         + wearable_df["PlotTime"].iloc[-1].strftime("%Y-%m-%d %H:%M:%S")
     )
 
-# Live temperature vs time plot
-st.subheader(f"Temperature vs Time - {patient_label}")
+    # Live temperature vs time plot
+    st.subheader(f"Temperature vs Time - {patient_label}")
 
-fig_wearable = go.Figure()
+    fig_wearable = go.Figure()
 
-fig_wearable.add_scatter(
-    x=wearable_df["PlotTime"],
-    y=wearable_df["temp"],
-    mode="markers",
-    name="Temperature",
-    line=dict(color="#ff4757", width=2),
-    marker=dict(size=4),
-    hovertemplate=(
-        "<b>%{x}</b><br>"
-        "Temperature: %{y:.2f} °C"
-        "<extra></extra>"
-    ),
-)
+    fig_wearable.add_scatter(
+        x=wearable_df["PlotTime"],
+        y=wearable_df["temp"],
+        mode="lines+markers",
+        name="Temperature",
+        line=dict(color="#ff4757", width=2),
+        marker=dict(size=4),
+        hovertemplate=(
+            "<b>%{x}</b><br>"
+            "Temperature: %{y:.2f} °C"
+            "<extra></extra>"
+        ),
+    )
 
-fig_wearable.update_layout(
-    xaxis_title="Time",
-    yaxis_title="Temperature (°C)",
-    height=500,
-    hovermode="x unified",
-    margin=dict(l=60, r=30, t=50, b=60),
-)
+    fig_wearable.update_layout(
+        xaxis_title="Time",
+        yaxis_title="Temperature (°C)",
+        height=500,
+        hovermode="x unified",
+        margin=dict(l=60, r=30, t=50, b=60),
+    )
 
-st.plotly_chart(fig_wearable, use_container_width=True)
+    st.plotly_chart(fig_wearable, use_container_width=True)
 
-    # Raw data with st.expander("📋 View Wearable Data"):
+    # Raw data
+    with st.expander("📋 View Wearable Data"):
         display_df = wearable_df[
             ["device_datetime", "recorded_at", "temp"]
         ].copy()

@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -36,11 +37,6 @@ if "user" not in st.session_state:
     st.session_state.access_token = None
     st.session_state.refresh_token = None
 
-# Streamlit re-runs the whole script on every interaction, which creates a
-# brand-new `supabase` client each time. That fresh client has no memory of
-# a previous login, so table requests would go out unauthenticated (failing
-# RLS policies that check auth.uid()) unless we explicitly re-attach the
-# saved session here on every rerun.
 if st.session_state.user is not None and st.session_state.access_token:
     try:
         supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
@@ -135,10 +131,10 @@ def get_uploads_for_patient(patient_id):
 
 
 def get_wearable_logs(device_id):
-    """Fetch live wearable temperature records for a device from Supabase."""
+    """Fetch live wearable temperature + battery records for a device from Supabase."""
     res = (
         supabase.table("wearable_logs")
-        .select("id,device_id,recorded_at,device_datetime,temp")
+        .select("id,device_id,recorded_at,device_datetime,temp,battery_voltage")
         .eq("device_id", device_id)
         .order("recorded_at", desc=False)
         .execute()
@@ -353,10 +349,14 @@ elif page == "Wearable Temperature":
 
     wearable_df = pd.DataFrame(rows)
 
-    # Numeric temperature
+    # Numeric temperature / battery voltage
     wearable_df["temp"] = pd.to_numeric(
         wearable_df["temp"], errors="coerce"
     )
+    if "battery_voltage" in wearable_df.columns:
+        wearable_df["battery_voltage"] = pd.to_numeric(
+            wearable_df["battery_voltage"], errors="coerce"
+        )
 
     # ---------------------------------------------------------------
     # HANDLE TIMESTAMPS SAFELY
@@ -500,17 +500,64 @@ elif page == "Wearable Temperature":
 
     st.plotly_chart(fig_wearable, use_container_width=True)
 
+    # ---------------------------------------------------------------
+    # BATTERY VOLTAGE GRAPH
+    # ---------------------------------------------------------------
+    if "battery_voltage" in wearable_df.columns and wearable_df["battery_voltage"].notna().any():
+        st.subheader(f"Battery Voltage vs Time - {patient_label}")
+
+        batt_df = wearable_df.dropna(subset=["battery_voltage"])
+
+        latest_batt = batt_df["battery_voltage"].iloc[-1]
+        min_batt = batt_df["battery_voltage"].min()
+
+        bcol1, bcol2 = st.columns(2)
+        bcol1.metric("Latest Battery Voltage", f"{latest_batt:.2f} V")
+        bcol2.metric("Lowest Recorded", f"{min_batt:.2f} V")
+
+        fig_batt = go.Figure()
+        fig_batt.add_scatter(
+            x=batt_df["PlotTime"],
+            y=batt_df["battery_voltage"],
+            mode="lines+markers",
+            name="Battery Voltage",
+            line=dict(color="#1a7f3c", width=2),
+            marker=dict(size=5),
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "Battery: %{y:.2f} V"
+                "<extra></extra>"
+            ),
+        )
+        fig_batt.add_hline(
+            y=3.4, line_dash="dash", line_color="#c0392b",
+            annotation_text="Low battery (~3.4V)", annotation_position="bottom right",
+        )
+        fig_batt.update_layout(
+            xaxis_title="Time",
+            yaxis_title="Battery Voltage (V)",
+            height=400,
+            hovermode="x unified",
+            margin=dict(l=60, r=30, t=50, b=60),
+        )
+        st.plotly_chart(fig_batt, use_container_width=True)
+    else:
+        st.info("No battery voltage data found yet for this device.")
+
     # Raw data
     with st.expander("📋 View Wearable Data"):
-        display_df = wearable_df[
-            ["device_datetime", "recorded_at", "temp"]
-        ].copy()
+        display_cols = ["device_datetime", "recorded_at", "temp"]
+        rename_map = {
+            "device_datetime": "Device Time",
+            "recorded_at": "Supabase Server Time",
+            "temp": "Temperature (°C)",
+        }
+        if "battery_voltage" in wearable_df.columns:
+            display_cols.append("battery_voltage")
+            rename_map["battery_voltage"] = "Battery Voltage (V)"
 
-        display_df.columns = [
-            "Device Time",
-            "Supabase Server Time",
-            "Temperature (°C)",
-        ]
+        display_df = wearable_df[display_cols].copy()
+        display_df.columns = [rename_map[c] for c in display_cols]
 
         display_df = display_df.sort_values(
             "Device Time", ascending=False
